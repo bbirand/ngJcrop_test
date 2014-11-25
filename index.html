@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="kasaApp">
+<head>
+  <title>Kasa Enterprise</title>
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+
+<script src="bower_components/jquery/dist/jquery.js"></script>
+<script src="bower_components/jcrop/js/jquery.Jcrop.js"></script>
+<script src="bower_components/angular/angular.js"></script>
+<script src="bower_components/ng-jcrop/ng-jcrop.js"></script>
+
+<script type="text/javascript">
+
+var kasaApp = angular.module('kasaApp', ['ngJcrop']);
+
+kasaApp.config(function(ngJcropConfigProvider){
+
+    ngJcropConfigProvider.setJcropConfig({
+        bgColor: 'black',
+        bgOpacity: .4,
+        aspectRatio: 0
+    });
+});
+
+
+kasaApp.controller('KasaEditSensorsCtrl', ['$scope', function ($scope) {
+
+  console.log("Launching");
+
+  // All sensors for the current device
+  $scope.sensors = [
+    {'name': 'Temp1', 'coords': [43, 26, 139, 97, 96, 71] }
+  ];
+	
+  // Initial current selection
+  $scope.cur_selection = {};
+  $scope.cur_selection.src = "img/test.jpg";
+  $scope.cur_selection.name = "";
+  $scope.cur_selection.coords = null; // [9, 8, 9, 8, 0, 0];
+
+  /**
+    Add a new element
+    */
+  $scope.addSensor = function() {
+
+      if ($scope.cur_selection.name == "") {
+          window.alert("Please add a name for this sensor");
+          return
+      }
+
+      // Push to the main DB
+      var newSensor = angular.copy($scope.cur_selection);
+      $scope.sensors.push(newSensor);
+
+      // Remove the fields
+      $scope.cur_selection.name = "";
+      $scope.cur_selection.coords = null; // [9, 8, 9, 8, 0, 0];
+      console.log($scope);
+
+  }
+
+  /**
+    Delete an element
+    */
+  $scope.deleteSensor = function(sensor) {
+      var index = $scope.sensors.indexOf(sensor);
+      $scope.sensors.splice(index, 1);
+  }
+
+
+}]);
+</script>
+
+<!--
+  function addSensor() {
+    jcrop_api.release();
+  }
+-->
+
+<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css" type="text/css" />
+<link rel="stylesheet" href="bower_components/jcrop/css/jquery.Jcrop.css" type="text/css" />
+
+<style>
+#sensor_overlays {
+    position: relative;
+}
+
+.sensor_highlight {
+    position : absolute;
+    border : 2px solid blue;
+    z-index : 600;
+}
+
+.sensor_label {
+    background-color: white;
+    color: red;
+    position: relative;
+    top: -1em;
+}
+
+.active {
+    border: 3px solid red;
+}
+
+</style>
+
+</head>
+
+<body ng-controller="KasaEditSensorsCtrl">
+
+<div class="container">
+
+<div class="row">
+    <div class="col-md-12" style="text-align:center">
+    <h1>Kasa Enterprise</h1>
+    </div>
+</div> <!-- row-->
+
+<div class="row">
+<div class="col-md-8">
+
+  <!-- This is the image we're attaching Jcrop to -->
+
+  <div id="sensor_overlays">
+      <div id="jcrop_image" ng-jcrop="cur_selection.src" selection="cur_selection.coords"></div>
+      <div ng-repeat="sensor in sensors" class="sensor_highlight" ng-class="{active: sensor.isSelected}" style="top: {{sensor.coords[1]}}px; left:{{sensor.coords[0]}}px; width:{{sensor.coords[4]}}px; height:{{sensor.coords[5]}}px">
+          <span class="sensor_label" ng-if="sensor.isSelected">{{sensor.name}}</span>
+      </div>
+  </div>
+
+  <!-- This is the form that our event handler fills -->
+  <form id="coords"
+    class="coords"
+    onsubmit="return false;"
+    action="http://example.com/post.php">
+
+    <div class="inline-labels">
+    <label>Name  <input type="text" size=20 id="sensor_name" name="sensor_name" ng-model="cur_selection.name"/></label>
+    <label>Value <input type="text" readonly="readonly" size=20 id="sensor_value" name="sensor_value" value="123.4"/></label>
+    <label>Type <input type="text" readonly="readonly" size=20 value="Integer"/></label>
+    <br/>
+    <button id="add_sensor" ng-click="addSensor()">Add Sensor</button>
+    </div>
+  </form>
+  </div>
+
+  <div class="col-md-4">
+  <table id="sensor_list" class="table table-bordered table-hover table-striped">
+      <thead>
+          <th>Name</th>
+          <th>Value</th>
+          <th>Ops</th>
+      </thead>
+      <tbody>
+      <tr ng-repeat="sensor in sensors" ng-mouseenter="sensor.isSelected=true" ng-mouseleave="sensor.isSelected=false">
+          <td>{{sensor.name}}</td>
+          <td>XX.XX</td>
+          <td>
+              <button ng-click="deleteSensor(sensor)">Del</button>
+              <button onclick="window.alert('Not implemented')">Edit</button>
+          </td>
+      </tr>
+      </tbody>
+  </table>
+  {{cur_selection}}
+
+</div>
+</div>
+</div>
+</div>
+
+</body>
+</html>
+
